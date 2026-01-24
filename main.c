@@ -1,164 +1,219 @@
-#include<stdio.h>
+#include <stdio.h>
+#include <string.h>
 
-		struct record
-		{
-			char Name[20];
-			int Rollno;
-			int Phoneno;
-			char Address[100];
-		};
-		 
-	void addStudent()
-	
-	{ 
-		struct record student;
-		FILE *ptr;
-			fflush(stdin);
-			
-			  printf(" \n Enter the record=");
-			  printf("\n Enter the Name=");
-			  gets(student.Name);
-			  
-			  fflush(stdin);
-			  printf("\n Enter the Rollno.=");
-			  scanf("%d",&student.Rollno);
-			    
-			  fflush(stdin);
-			  printf("\n Enter the Phoneno.=");  
-			  scanf("%d",&student.Phoneno);
-			  
-			  fflush(stdin);
-			  printf("\n Enter the Address=");
-			  gets(student.Address);
-			  
-		 ptr=fopen("student.txt","a");
-		fwrite((char*)&student,sizeof(student),1,ptr);
-		fclose(ptr);
-	}
-	
-	void deleteStudent()
-	{
-		int r;
-       struct record student;
-         FILE *ptr, *ptr2;
-          int found = 0;
-          ptr = fopen("student.txt", "r");
-          ptr2 = fopen("stud.txt", "w");
-          printf("Enter the Rollno to delete: ");
-          scanf("%d", &r);
+/* ---------- Structure ---------- */
+struct record
+{
+    char name[20];
+    int roll;
+    float marks;
+};
 
-    
-    while (fread(&student, sizeof(student), 1, ptr)) 
-	{
-        if (student.Rollno != r)
-	    {
-            fwrite(&student, sizeof(student), 1, ptr2);
-         } 
-		else
-		{
-		
+/* ---------- Add Record ---------- */
+void addRecord()
+{
+    struct record s;
+    FILE *fp;
+    int another = 1;
+
+    fp = fopen("dkb.txt", "ab");
+
+    if (fp == NULL)
+    {
+        printf("File error!\n");
+        return;
+    }
+
+    while (another)
+    {
+        printf("\nEnter Name: ");
+        scanf("%s", s.name);
+
+        printf("Enter Roll: ");
+        scanf("%d", &s.roll);
+
+        printf("Enter Marks: ");
+        scanf("%f", &s.marks);
+
+        fwrite(&s, sizeof(s), 1, fp);
+
+        printf("\nAdd another record? (1-Yes / 0-No): ");
+        scanf("%d", &another);
+    }
+
+    fclose(fp);
+}
+
+/* ---------- Show Records ---------- */
+void showRecord()
+{
+    struct record s;
+    FILE *fp = fopen("dkb.txt", "rb");
+
+    if (fp == NULL)
+    {
+        printf("\nNo records found!\n");
+        return;
+    }
+
+    printf("\nNAME\tROLL\tMARKS\n");
+    printf("---------------------------\n");
+
+    while (fread(&s, sizeof(s), 1, fp))
+    {
+        printf("%s\t%d\t%.2f\n", s.name, s.roll, s.marks);
+    }
+
+    fclose(fp);
+}
+
+/* ---------- Search Record ---------- */
+void searchRecord()
+{
+    struct record s;
+    FILE *fp = fopen("dkb.txt", "rb");
+    int roll, found = 0;
+
+    if (fp == NULL)
+    {
+        printf("\nNo records found!\n");
+        return;
+    }
+
+    printf("\nEnter roll to search: ");
+    scanf("%d", &roll);
+
+    while (fread(&s, sizeof(s), 1, fp))
+    {
+        if (s.roll == roll)
+        {
+            printf("\nRecord Found:");
+            printf("\nName: %s", s.name);
+            printf("\nRoll: %d", s.roll);
+            printf("\nMarks: %.2f\n", s.marks);
             found = 1;
+            break;
         }
     }
 
-    fclose(ptr);
-    fclose(ptr2);
+    if (!found)
+        printf("\nRecord not found!\n");
 
-     
-       if (found)
-	    {
-           remove("student.txt");
-           rename("stud.txt", "student.txt");
-           printf("Record deleted successfully.\n");
-        } 
-    	else 
-	    {
-           remove("stud.txt");
-           printf("Record not found.\n");
+    fclose(fp);
+}
+
+/* ---------- Delete Record ---------- */
+void deleteRecord()
+{
+    struct record s;
+    FILE *fp, *temp;
+    int roll, found = 0;
+
+    fp = fopen("dkb.txt", "rb");
+    temp = fopen("temp.txt", "wb");
+
+    if (fp == NULL)
+    {
+        printf("\nNo records found!\n");
+        return;
+    }
+
+    printf("\nEnter roll to delete: ");
+    scanf("%d", &roll);
+
+    while (fread(&s, sizeof(s), 1, fp))
+    {
+        if (s.roll == roll)
+            found = 1;
+        else
+            fwrite(&s, sizeof(s), 1, temp);
+    }
+
+    fclose(fp);
+    fclose(temp);
+
+    remove("dkb.txt");
+    rename("temp.txt", "dkb.txt");
+
+    if (found)
+        printf("\nRecord deleted successfully!\n");
+    else
+        printf("\nRecord not found!\n");
+}
+
+/* ---------- Update Record ---------- */
+void updateRecord()
+{
+    struct record s;
+    FILE *fp;
+    int roll, found = 0;
+
+    fp = fopen("dkb.txt", "rb+");
+
+    if (fp == NULL)
+    {
+        printf("\nNo records found!\n");
+        return;
+    }
+
+    printf("\nEnter roll to update: ");
+    scanf("%d", &roll);
+
+    while (fread(&s, sizeof(s), 1, fp))
+    {
+        if (s.roll == roll)
+        {
+            printf("\nEnter new name: ");
+            scanf("%s", s.name);
+
+            printf("Enter new marks: ");
+            scanf("%f", &s.marks);
+
+            fseek(fp, -sizeof(s), SEEK_CUR);
+            fwrite(&s, sizeof(s), 1, fp);
+
+            found = 1;
+            break;
         }
-		
-	}
-	
-	void searchStudent()
-	{
-		int r;
-		struct record student;
-		FILE *ptr;
-		ptr=fopen("student.txt","r");
-		printf("Enter the Rollno=");
-			scanf("%d",&r);
-	
-		while(fread(&student,sizeof(student),1,ptr))
-		{
-			if(student.Rollno==r)
-			{
-					printf("\n %s %d %d %f",student.Name,student.Rollno,student.Phoneno,student.Address);
-		    }
-		    else
-		    {
-		    	printf("Sorry ,record not found");
-			}
-			
-		}
-		
-		fclose(ptr);
+    }
 
-		
-	}
-	
-	void displayStudent()
-	{
-		struct record student;
-		FILE *ptr;
-		ptr=fopen("student.txt","r");
-		
-	
-		while(fread(&student,sizeof(student),1,ptr))
-		{
-			printf("\n %s %d %d %f",student.Name,student.Rollno,student.Phoneno,student.Address);
-		}
-		
-		fclose(ptr);
-		
+    fclose(fp);
 
-		
-		
-	}
-	main()
-	{
-		int choice;
-		do
-		{
-			printf("\n\t\t\t\t\t\t Students Record System");
-			printf("\n\t\t\t\t\t\t Press 1: For insertion");
-			printf("\n\t\t\t\t\t\t Press 2: For deletion");
-			printf("\n\t\t\t\t\t\t Press 3: For searching");
-			printf("\n\t\t\t\t\t\t Press 4: For displaying");
-			printf("\n\t\t\t\t\t\t Press 5: For exit");
-			printf("\n\t\t\t\t\t\t Enter your choice:-");
-			scanf("%d",&choice);
-				
-				switch(choice)
-				{
-					case 1:
-						addStudent();
-						break;
-					case 2:
-						deleteStudent();
-						break;
-					case 3:
-						searchStudent();
-						break;
-					case 4:
-						displayStudent();
-						break;
-					case 5:
-						printf("\n\t\t\t\t\t\tExit");
-						break;
-					default:
-						printf("\n\t\t\t\t\t\t Sorry,Try Again");
-				}
-		}
-		while(choice!=5);
-			
-	}
+    if (found)
+        printf("\nRecord updated successfully!\n");
+    else
+        printf("\nRecord not found!\n");
+}
+
+/* ---------- Main Function ---------- */
+int main()
+{
+    int choice;
+
+    do
+    {
+        printf("\n\n====== STUDENT RECORD SYSTEM ======");
+        printf("\n1. Add Record");
+        printf("\n2. Show Records");
+        printf("\n3. Search Record");
+        printf("\n4. Delete Record");
+        printf("\n5. Update Record");
+        printf("\n6. Exit");
+        printf("\nEnter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice)
+        {
+            case 1: addRecord(); break;
+            case 2: showRecord(); break;
+            case 3: searchRecord(); break;
+            case 4: deleteRecord(); break;
+            case 5: updateRecord(); break;
+            case 6: printf("\nExiting program...\n"); break;
+            default: printf("\nInvalid choice!\n");
+        }
+    }
+    while (choice != 6);
+
+    return 0;
+}
